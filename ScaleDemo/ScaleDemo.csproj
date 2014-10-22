@@ -369,6 +369,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CQRS\CQRS.csproj">
+      <Project>{72e43b9e-00f8-44d1-9cfb-811de5b15ebe}</Project>
+      <Name>CQRS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GalleryHelpers\GalleryHelpers.csproj">
       <Project>{e6e19b19-1d44-4dfd-b9ab-be95889f7cef}</Project>
       <Name>GalleryHelpers</Name>
