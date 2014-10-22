@@ -73,7 +73,7 @@ namespace CQRS
         }
 
 
-        public static void processQueue([QueueTrigger("test")] Message m)
+        public static void processQueue([QueueTrigger("scaledemo")] Message m)
         {
             Console.WriteLine(m.operation + ": " + m.galleryObject);
             Console.WriteLine(m.serializedobject);
