@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleDemo", "ScaleDemo\ScaleDemo.csproj", "{D84D88AF-3539-4A54-83EB-1ED5AFD94411}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GalleryHelpers", "GalleryHelpers\GalleryHelpers.csproj", "{E6E19B19-1D44-4DFD-B9AB-BE95889F7CEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CQRS", "CQRS\CQRS.csproj", "{72E43B9E-00F8-44D1-9CFB-811DE5B15EBE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D84D88AF-3539-4A54-83EB-1ED5AFD94411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D84D88AF-3539-4A54-83EB-1ED5AFD94411}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D84D88AF-3539-4A54-83EB-1ED5AFD94411}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D84D88AF-3539-4A54-83EB-1ED5AFD94411}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6E19B19-1D44-4DFD-B9AB-BE95889F7CEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6E19B19-1D44-4DFD-B9AB-BE95889F7CEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6E19B19-1D44-4DFD-B9AB-BE95889F7CEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6E19B19-1D44-4DFD-B9AB-BE95889F7CEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72E43B9E-00F8-44D1-9CFB-811DE5B15EBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72E43B9E-00F8-44D1-9CFB-811DE5B15EBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72E43B9E-00F8-44D1-9CFB-811DE5B15EBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72E43B9E-00F8-44D1-9CFB-811DE5B15EBE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

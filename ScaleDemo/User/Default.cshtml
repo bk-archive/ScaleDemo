@@ -1,0 +1,91 @@
+﻿@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}
+
+@{
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var dbRead = appSettings["dbRead"];
+
+    var currentLocation = appSettings["siteName"];
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+
+    var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+
+    var galleryId = UrlData[0].AsInt();
+
+    var database = Database.Open(dbRead);
+
+    WebSecurity.RequireAuthenticatedUser();
+
+
+    var user = database.QuerySingle("SELECT UserId, DisplayName, Bio FROM UserProfiles WHERE UserId = @0", WebSecurity.CurrentUserId);
+
+    Page.Title = "Edit Profile - " + user.DisplayName;
+
+    Validation.RequireField("displayName", "Please enter a display name");
+
+    string displayName = null;
+    if (IsPost && Validation.IsValid())
+    {
+        var userObject = new GalleryHelpers.Users();
+        displayName = Request["displayName"].Trim();
+        if (displayName.IsEmpty())
+        {
+            displayName = User.Identity.Name;
+        }
+
+        userObject.displayName = displayName;
+        userObject.bio = Request["bio"].Trim();
+        userObject.id = WebSecurity.CurrentUserId;
+        
+        var operationMessage = new GalleryHelpers.Message();
+
+        operationMessage.operation = "update";
+        operationMessage.galleryObject = userObject.ToString();
+        operationMessage.serializedobject = Json.Encode(userObject);
+
+        aSH.enqueue(queue, operationMessage);
+
+        System.Threading.Thread.Sleep(500);
+        Response.Redirect(Href("~/User/View",user.UserId));
+    }
+}
+<h1>Edit Profile</h1>
+
+<section id="profileForm">
+    <header>
+        <p>
+            Welcome back, @user.DisplayName.  You may use the below form to change your display name (shown in comments)
+            and biography (shown on your <a href="~/User/View/@WebSecurity.CurrentUserId" title="View your public profile">public profile</a>).
+        </p>
+    </header>
+
+    <form method="post">
+        <fieldset class="no-legend" >
+            <legend>Edit Profile</legend>
+            <ol>
+                <li>
+                    <label for="displayName">Display name:</label>
+                    <input type="text" id="displayName" name="displayName" title="Change display name" placeholder="Display name" value="@(displayName ?? user.DisplayName)" @Validation.For("displayName") />
+                    @Html.ValidationMessage("displayName")
+                </li>
+                <li>
+                    <label for="bio">Bio:</label>
+                    <textarea id="bio" name="bio" title="Change bio" rows="4" cols="50" placeholder="Biography">@user.Bio</textarea>
+                </li>
+            </ol>
+            <p class="form-actions">
+                <input type="submit" value="Save" title="Save Changes" />
+            </p>
+        </fieldset>
+    </form>
+</section>

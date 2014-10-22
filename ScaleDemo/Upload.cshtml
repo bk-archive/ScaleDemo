@@ -1,0 +1,116 @@
+﻿@using GalleryHelpers;
+
+@{
+    var testUser = Request.QueryString["name"];
+
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var dbRead = appSettings["dbRead"];
+    var currentLocation = appSettings["siteName"];
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+    var galleryId = UrlData[0].AsInt();
+
+    var db = WebMatrix.Data.Database.Open(dbRead);
+
+    var gallery = db.QuerySingle("SELECT * FROM Galleries WHERE Id = @0", galleryId);
+
+    if (gallery == null)
+    {
+        Response.SetStatus(HttpStatusCode.NotFound);
+        return;
+    }
+
+    Page.Title = "Upload Photo to Gallery - " + gallery.Name;
+    if (IsPost)
+    {
+        var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+        var numFiles = Request.Files.Count;
+
+        if (numFiles == 0)
+        {
+            ModelState.AddError("fileUpload", "Please specify at least one photo to upload.");
+        }
+        else
+        {
+            for (int i = 0; i < numFiles; i++)
+            {
+                var file = Request.Files[i];
+
+                var tmpImage = new WebImage(file.InputStream);
+                var uploadPicture = new GalleryHelpers.Photos();
+
+                uploadPicture.galleryId = galleryId;
+                uploadPicture.userId =  WebSecurity.CurrentUserId;
+
+                uploadPicture.fileTitle = Path.GetFileNameWithoutExtension(file.FileName).Trim();
+                if (uploadPicture.fileTitle.IsEmpty())
+                {
+                    uploadPicture.fileTitle = "Untitled";
+                }
+                uploadPicture.fileName = Guid.NewGuid() + Path.GetExtension(file.FileName.Trim());
+
+                uploadPicture.fileExtension = Path.GetExtension(file.FileName.Trim());
+                uploadPicture.fileType = tmpImage.ImageFormat;
+                uploadPicture.fileSize = tmpImage.GetBytes().Length;
+
+                uploadPicture.uploadDate = "" + DateTime.Now;
+
+                uploadPicture.tmpLocation = Server.MapPath("~/App_Data/_tmp/");
+
+                if (uploadPicture.fileSize > 0)
+                {
+                    uploadPicture.write(Server.MapPath("~/App_Data/_tmp/full/") + uploadPicture.fileName, tmpImage.GetBytes());
+                    uploadPicture.write(Server.MapPath("~/App_Data/_tmp/large/") + uploadPicture.fileName, tmpImage.Resize(600, 600, true, true).GetBytes());
+                    uploadPicture.write(Server.MapPath("~/App_Data/_tmp/medium/") + uploadPicture.fileName, tmpImage.Resize(400, 400, true, true).GetBytes());
+                    uploadPicture.write(Server.MapPath("~/App_Data/_tmp/small/") + uploadPicture.fileName, tmpImage.Resize(300, 300, true, true).GetBytes());
+                    uploadPicture.write(Server.MapPath("~/App_Data/_tmp/thumb/") + uploadPicture.fileName, tmpImage.Resize(200, 200, true, true).GetBytes());
+
+                    try
+                    {
+                        var operationMessage = new GalleryHelpers.Message();
+
+                        operationMessage.operation = "insert";
+                        operationMessage.galleryObject = uploadPicture.ToString();
+                        operationMessage.serializedobject = Newtonsoft.Json.JsonConvert.SerializeObject(uploadPicture);
+
+                        aSH.enqueue(queue, operationMessage);
+                    }
+                    catch (Exception e)
+                    {
+                        ModelState.AddError("fileUpload", "There was a problem uploading your file");
+                    }
+                }
+            }
+            System.Threading.Thread.Sleep(500);
+            Response.Redirect(Href("~/View", galleryId));
+        }
+    }
+}
+<h1>Upload Photo</h1>
+
+<p>
+    The photo you upload will be placed in the
+    <a class="italic" href="~/View/@galleryId" title="@gallery.Name">@gallery.Name</a> gallery.
+</p>
+
+<form method="post" enctype="multipart/form-data">
+    @Html.ValidationSummary("Unable to upload:")
+    <fieldset class="no-legend">
+        <legend>Upload Photo</legend>
+        <input type="file" name="files" value="" multiple="multiple" />
+
+        <p class="form-actions">
+            <input type="submit" value="Upload" title="Upload photo" />
+            <a href="~/View/@galleryId" title="Return to the &quot;@gallery.Name&quot; gallery.">Cancel</a>
+        </p>
+    </fieldset>
+</form>
+
+<p class="message info">
+    The default file size is limited to 4MB. To change this you will need to update the 'HttpRuntimeSection/MaxRequestLength' section in web.config.
+</p>

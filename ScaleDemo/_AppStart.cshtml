@@ -1,0 +1,6 @@
+﻿@{
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var dbRead = appSettings["dbRead"];
+    
+    WebSecurity.InitializeDatabaseConnection(dbRead, "UserProfiles", "UserId", "Email", true);
+}

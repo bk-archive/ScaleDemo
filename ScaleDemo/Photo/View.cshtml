@@ -1,0 +1,130 @@
+﻿@{
+    var photoId = UrlData[0].AsInt();
+
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+
+    var dbRead = appSettings["dbRead"];
+    var currentLocation = appSettings["siteName"];
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+    var disqus = appSettings["disqus"];
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+
+
+    var galleryId = UrlData[0].AsInt();
+
+    var db = Database.Open(dbRead);
+
+    var photo = db.QuerySingle("SELECT * FROM Photos WHERE Id = @0", photoId);
+    if (photo == null)
+    {
+        Response.SetStatus(HttpStatusCode.NotFound);
+        return;
+    }
+
+    Page.Title = "Photo - " + photo.FileTitle;
+
+    string description = photo.description;
+
+    if (IsPost)
+    {
+        var newComment = Request["newComment"].Trim();
+        if (newComment.IsEmpty()) 
+        {
+            Response.Redirect(Href("View", photoId));
+        }
+
+        System.Threading.Thread.Sleep(500);
+        Response.Redirect(Href("View",photoId));
+        return;
+    }
+
+    // Found a match - so show its info
+    var user = db.QuerySingle("SELECT * FROM UserProfiles WHERE UserId = @0", photo.UserId);
+    var gallery = db.QuerySingle("SELECT * FROM Galleries WHERE Id = @0", photo.GalleryId);
+    var comments = db.Query(@"SELECT * FROM Comments INNER JOIN UserProfiles
+                              ON Comments.UserId = UserProfiles.UserId WHERE PhotoId = @0 ORDER BY Comments.CommentDate", photo.Id);
+    var tagList = db.Query("SELECT Tags_TagName FROM Photos_Tags WHERE Photos_Id = @0 ORDER BY Tags_TagName", photo.Id);
+}
+
+<h1>@photo.FileTitle</h1>
+
+<section id="sidebar">
+    @if (user.UserId == WebSecurity.CurrentUserId)
+    {
+        <p>
+            As the author, you can <a href="~/Photo/Edit/@photoId" title="edit">edit</a>
+            or <a href="~/Photo/Remove/@photoId" title="remove">remove</a> this photo.
+        </p>
+    }
+    <dl>
+        <dt class="description">Description</dt>
+        <dd class="description">
+            @if (!description.IsEmpty())
+            {
+                <text>@photo.Description</text>
+            }
+            else 
+            {
+                <text>The uploader did not provide a description for this photo.</text>
+            }
+        </dd>
+        <dt class="uploaded-by">Uploaded by</dt>
+        <dd class="uploaded-by"><a href="~/User/View/@user.UserId" title="@user.DisplayName">@user.DisplayName</a></dd>
+        <dt class="upload-date">Upload date</dt>
+        <dd class="upload-date">@photo.UploadDate</dd>
+        <dt class="part-of-gallery">Gallery</dt>
+        <dd><a href="~/View/@gallery.Id" title="@gallery.Name">@gallery.Name</a></dd>
+        <dt class="tags">Tags</dt>
+        <dd class="tags">
+            <ul class="comma-separated">
+            @if (tagList.Count == 0)
+            {
+                <li>This photo has no tags.</li>
+            }
+            else
+            {
+                foreach (var t in tagList)
+                {
+                    <li><a href="~/Tag/View/@t.Tags_TagName" title="@t.Tags_TagName">@t.Tags_TagName</a></li>
+                }
+            }
+            </ul>
+        </dd>
+    </dl>
+    @if (WebSecurity.IsAuthenticated)
+    {
+        <a href="~/Photo/EditTags/@photoId">edit tags</a>
+    }
+    <div class="hide-from-mobile">
+        <p>
+            <a class="download" href="@thisSite.storageRoot/@thisSite.blobContainer/full/@photo.primaryUri" title="Download: @(photo.FileTitle + photo.FileExtension)">Download full photo!</a> (@(photo.FileSize / 1024) KB)
+        </p>
+    </div>
+</section>
+
+<div id="photo">
+    <img class="large-photo" alt="@Html.AttributeEncode(photo.FileTitle)"
+         src="@thisSite.storageRoot/@thisSite.blobContainer/large/@photo.primaryUri" />
+   
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        /* * * TODO: shortname should be in appconfig * * */
+        var disqus_shortname = '@disqus'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</div>

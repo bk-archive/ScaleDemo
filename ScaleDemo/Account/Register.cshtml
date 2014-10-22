@@ -1,0 +1,123 @@
+﻿@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}
+
+@{
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var currentLocation = appSettings["siteName"];
+
+    var dbRead = appSettings["dbRead"];
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+
+    Page.Title = "Register";
+
+    Validation.RequireField("email", "You must specify an email address.");
+    Validation.RequireField("password", "You must specify a password.");
+    Validation.Add("confirmPassword",
+        Validator.Required("You must specify a confirm password."),
+        Validator.EqualsTo("password", "The new password and confirmation password do not match."));
+
+    //if (!ReCaptcha.Validate("PRIVATE_KEY")) 
+    //{
+    //    ModelState.AddFormError("Captcha response was not correct.");
+    //}
+
+    if (IsPost && Validation.IsValid() && ModelState.IsValid)
+    {
+        var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+        var userObject = new GalleryHelpers.Users();
+
+        // Execute validators and also check if any ReCaptcha errors are present.
+        var email = Request["email"];
+        var password = Request["password"];
+        var confirmPassword = Request["confirmPassword"];
+
+        userObject.email = email;
+
+
+        // Create the user profile
+        var db = Database.Open(dbRead);
+        // Check if user already exists
+        var userExists = db.QuerySingle("SELECT Email FROM UserProfiles WHERE LOWER(Email) = LOWER(@0)", email);
+
+        if (userExists == null)
+        {
+
+            var operationMessage = new GalleryHelpers.Message();
+
+            operationMessage.operation = "insert";
+            operationMessage.galleryObject = userObject.ToString();
+            operationMessage.serializedobject = Json.Encode(userObject);
+
+            aSH.enqueue(queue, operationMessage);
+
+            // Create and associate a new entry in the membership database.
+            // If successful, continue processing the request
+            try
+            {
+                System.Threading.Thread.Sleep(6000);
+                WebSecurity.CreateAccount(email, password);
+                WebSecurity.Login(email, password);
+                Response.Redirect("~/");
+            }
+            catch (System.Web.Security.MembershipCreateUserException e)
+            {
+                ModelState.AddFormError(e.ToString());
+            }
+        }
+        else
+        {
+            // User already exists
+            ModelState.AddFormError("Email address is already in use.");
+        }
+    }
+}
+
+<hgroup>
+    <h1>Account Creation</h1>
+    <h2>Use the form below to create a new account.</h2>
+</hgroup>
+
+<form method="post">
+    @Html.ValidationSummary("Account creation was unsuccessful. Please correct the errors and try again.", excludeFieldErrors: true, htmlAttributes: null)
+
+    <fieldset class="no-legend">
+        <legend>Account Creation</legend>
+        <ol>
+            <li>
+                <label for="email">Email:</label>
+                <input type="text" name="email" title="Email address" placeholder="Email address" @Validation.For("email") />
+                @Html.ValidationMessage("email")
+            </li>
+            <li>
+                <label for="password">Password:</label>
+                <input type="password" name="password" title="Password" @Validation.For("password") />
+                @Html.ValidationMessage("password")
+            </li>
+            <li>
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" name="confirmPassword" title="Confirm password" @Validation.For("confirmPassword") />
+                @Html.ValidationMessage("confirmPassword")
+            </li>
+            <li>
+                <div class="message info">
+                    <p>To enable CAPTCHA verification, uncomment ReCaptcha.GetHtml and replace 'PUBLIC_KEY'
+                    with your public key.  At the top of this page, uncomment ReCaptcha.Validate and
+                    replace 'PRIVATE_KEY' with your private key.</p>
+                    <p>Register for reCAPTCHA keys at <a href="http://recaptcha.net" title="reCAPTCHA.net">reCAPTCHA.net</a>.</p>
+                </div>
+                @*@ReCaptcha.GetHtml("PUBLIC_KEY", theme: "white")*@
+            </li>
+        </ol>
+        <p class="form-actions">
+            <input type="submit" value="Register" title="Register" />
+        </p>
+    </fieldset>
+</form>

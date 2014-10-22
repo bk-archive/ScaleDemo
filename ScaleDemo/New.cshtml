@@ -1,0 +1,66 @@
+﻿@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}
+
+@{
+    WebSecurity.RequireAuthenticatedUser();
+
+
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var dbRead = appSettings["dbRead"];
+    var currentLocation = appSettings["siteName"];
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+
+    var database = WebMatrix.Data.Database.Open(dbRead);
+    var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+
+    var galleryId = UrlData[0].AsInt();
+    
+    
+    
+    Page.Title = "New Gallery";
+
+    Validation.RequireField("name", "You must specify a gallery name.");
+    
+    if (IsPost && Validation.IsValid()) 
+    {
+        var newGallery = new GalleryHelpers.Galleries();
+        newGallery.name = Request["Name"];
+
+        var operationMessage = new GalleryHelpers.Message();
+
+        operationMessage.operation = "insert";
+        operationMessage.galleryObject = newGallery.ToString();
+        operationMessage.serializedobject = Json.Encode(newGallery);
+
+        aSH.enqueue(queue, operationMessage);
+
+        System.Threading.Thread.Sleep(500);
+        Response.Redirect(Href("Default", ""));
+    }
+}
+
+<h1>New Gallery</h1>
+<form method="post">
+    <fieldset>
+        <legend>New Gallery</legend>
+        <ol>
+            <li>
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" title="Gallery name" placeholder="Gallery name" @Validation.For("name")/>
+                @Html.ValidationMessage("Name")
+            </li>
+        </ol>
+        <p class="form-actions" data-role="controlgroup" data-type="horizontal">
+            <input type="submit" data-role="button" value="Create" title="Create gallery" />
+            <a data-role="button" href="~/" title="Return to galleries">Cancel</a>
+        </p>
+    </fieldset>
+</form>

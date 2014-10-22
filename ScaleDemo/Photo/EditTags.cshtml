@@ -1,0 +1,77 @@
+﻿@{
+    WebSecurity.RequireAuthenticatedUser(); 
+    
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+    
+    var dbRead = appSettings["dbRead"];
+    var currentLocation = appSettings["siteName"];
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+    var db = Database.Open(dbRead);
+    var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+
+    var photoId = UrlData[0].AsInt();
+
+    var photo = db.QuerySingle("SELECT * FROM Photos WHERE Id = @0", photoId);
+    if (photo == null) 
+    {
+        Response.SetStatus(HttpStatusCode.NotFound);
+        return;
+    }
+
+    Page.Title = "Photo Tags - " + photo.FileTitle;
+
+    if (IsPost) 
+    {
+        var tags = new GalleryHelpers.Tags();
+        tags.photoId = UrlData[0].AsInt();
+        tags.rawTags = Request["newTags"];
+
+        var operationMessage = new GalleryHelpers.Message();
+
+        operationMessage.operation = "update";
+        operationMessage.galleryObject = tags.ToString();
+        operationMessage.serializedobject = Newtonsoft.Json.JsonConvert.SerializeObject(tags);
+
+        aSH.enqueue(queue, operationMessage);
+
+        System.Threading.Thread.Sleep(500);
+        Response.Redirect(Href("View", photo.Id));
+    }
+
+    // get a list of all the tags for this photo, sorted
+    var tagslist = db.Query("SELECT TagName FROM Tags, Photos_Tags WHERE Tags_TagName = TagName AND Photos_Id = @0 ORDER BY TagName", photoId);
+
+    var tagsList = new List<string>();
+    foreach (var t in tagslist) 
+    {
+        tagsList.Add(t.TagName);
+    }
+    var tagStringToDisplay = String.Join("; ", tagsList.ToArray());
+}
+
+<h1>Edit Tags for @photo.FileTitle</h1>
+
+<section id="sidebar">
+    <form method="post">
+        <fieldset class="no-legend">
+            <legend>Edit Tags</legend>
+            <ol>
+                <li>
+                    <label for="newTags">Enter tags, semicolon-delimited:</label>
+                    <textarea id="newTags" name="newTags" title="Enter tags seperated by a semicolon" rows="4" cols="50" placeholder="Enter tags seperated by a semicolon">@tagStringToDisplay</textarea>
+                </li>
+            </ol>
+            <p class="form-actions" data-role="controlgroup" data-type="horizontal">
+                <input type="submit" value="Save Changes" title="Save changes" />
+                <a data-role="button" href="~/Photo/View/@photoId" title="Do not save changes">Cancel</a>
+            </p>
+        </fieldset>
+    </form>
+</section>
+
+<img alt="@Html.AttributeEncode(photo.FileTitle)" src="@thisSite.storageRoot/@thisSite.blobContainer/medium/@photo.primaryUri" />

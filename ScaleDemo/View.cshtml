@@ -1,0 +1,65 @@
+﻿@{
+    var testUser = Request.QueryString["name"];
+
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+
+    var dbRead = appSettings["dbRead"];
+
+    var currentLocation = appSettings["siteName"];
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+
+
+    var galleryId = UrlData[0].AsInt();
+
+    var database = Database.Open(dbRead);
+
+    var gallery = database.QuerySingle("SELECT * FROM Galleries WHERE Id = @0", galleryId);
+    if (gallery == null)
+    {
+        Response.SetStatus(HttpStatusCode.NotFound);
+        return;
+    }
+
+    // Found a match - so show all its photos
+    var photos = database.Query("SELECT Id, FileTitle, primaryURI FROM Photos WHERE GalleryId = @0", galleryId).ToList();
+
+    Page.Title = "Gallery - " + gallery.Name;
+}
+<hgroup>
+    <h1>@gallery.Name</h1>
+    @if (photos.Count == 1)
+    {
+        <h2>This gallery contains one photo.</h2>
+    }
+    else
+    {
+        <h2>This gallery contains @photos.Count photos.</h2>
+    }
+</hgroup>
+
+<ul class="thumbnails" data-role="listview">
+    @foreach (var photo in photos)
+    {
+        <li>
+            <a href="~/Photo/View/@photo.Id" title="View @photo.FileTitle">
+                <img alt="thumbnail of @photo.FileTitle" src="@thisSite.storageRoot/@thisSite.blobContainer/thumb/@photo.primaryUri" class="thumbnail-border" />
+                <span class="image-overlay hide-from-mobile">@photo.FileTitle</span>
+                <span class="below-image hide-from-desktop">@photo.FileTitle</span>
+            </a>
+        </li>
+    }
+</ul>
+@if (WebSecurity.IsAuthenticated || testUser != string.Empty)
+{
+    <p class="actions hide-from-mobile">
+        <a href="~/Upload/@galleryId?name=@testUser" title="Upload a Photo">Upload a Photo</a>
+    </p>
+}

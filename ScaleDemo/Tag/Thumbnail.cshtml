@@ -1,0 +1,49 @@
+﻿@{
+    // Cache the image for a minute
+    Response.OutputCache(60);
+
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var dbRead = appSettings["dbRead"];
+    var currentLocation = appSettings["siteName"];
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+    
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+    var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+    var db = Database.Open(dbRead);
+
+    var tagName = UrlData[0];
+
+    var tag = db.Query("SELECT TagName FROM Tags WHERE TagName = @0", tagName);
+    var photoList = db.Query(@"SELECT TOP(3) Photos.primaryURI 
+                               FROM Photos, Photos_Tags 
+                               WHERE Photos.Id = Photos_Tags.Photos_Id AND Photos_Tags.Tags_TagName = @0", tagName).Shuffle().ToList();
+
+    if (tag != null && photoList.Count > 0)
+    {
+        using (MultiThumbnailGenerator generator = new MultiThumbnailGenerator())
+        {
+
+            foreach (var photo in photoList)
+            {
+                generator.AddImage(aSH.blobThumbnail(photo.primaryURI, @thisSite.blobContainer));
+            }
+            using (var outStream = new System.IO.MemoryStream())
+            {
+
+                generator.WritePngToStream(outStream);
+                var image = new WebImage(outStream);
+                image.Write();
+            }
+        }
+    }
+    else
+    {
+        // no photos - hopefully user will never see this
+        Response.Redirect("~/Shared/gallery-empty.png");
+    }
+}

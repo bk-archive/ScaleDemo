@@ -1,0 +1,67 @@
+﻿@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}
+
+@{
+    Page.Title = "Login";
+
+    Validation.RequireField("email", "You must specify an email address.");
+    Validation.RequireField("password", "You must specify a password.");
+
+    if (IsPost && Validation.IsValid()) 
+    {
+        var email = Request["email"];
+        var password = Request["password"];
+        var rememberMe = Request["rememberMe"].AsBool();
+        
+        if (WebSecurity.Login(email, password, rememberMe)) 
+        {
+            string returnUrl = Request["returnUrl"];
+            if (!returnUrl.IsEmpty()) 
+            {
+                Context.RedirectLocal(returnUrl);
+            } 
+            else
+            {
+                Response.Redirect("~/");
+            }
+        } 
+        else 
+        {
+            ModelState.AddFormError("The email or password provided is incorrect.");
+        }
+    }
+}
+<hgroup>
+    <h1>Login</h1>
+    <h2>Please enter your email and password below.</h2>
+</hgroup>
+
+<p>If you don't have an account, please <a href="~/Account/Register" title="Register">Register</a>.</p>
+<form method="post">
+    @Html.ValidationSummary("Log in was unsuccessful. Please correct the errors and try again.", excludeFieldErrors: true, htmlAttributes: null)
+
+    <fieldset class="no-legend">
+        <legend>Login</legend>
+        <ol>
+            <li>
+                <label for="email">Email</label>
+                <input type="text" name="email" title="Email Address" placeholder="Email address" @Validation.For("email")/>
+                @Html.ValidationMessage("email")
+            </li>
+            <li>
+                <label for="password">Password</label>
+                <input type="password" name="password" title="Password" @Validation.For("password")/>
+                @Html.ValidationMessage("password")
+            </li>
+            <li>
+                <label class="checkbox" for="rememberMe">Remember Me?</label>
+                <input type="checkbox" name="rememberMe" value="true" title="Remember Me" />
+            </li>
+        </ol>
+        <p class="form-actions">
+            <input type="submit" value="Login" title="Login" />
+        </p>
+    </fieldset>
+</form>

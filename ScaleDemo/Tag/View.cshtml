@@ -1,0 +1,78 @@
+﻿@{
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var dbRead = appSettings["dbRead"];
+    var currentLocation = appSettings["siteName"];
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+    var db = Database.Open(dbRead);
+    var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+
+    var photoId = UrlData[0].AsInt();
+    
+    
+    var tagName = UrlData[0];
+    Page.Title = "View Tag - " + tagName;
+
+    var photos = db.Query(@"SELECT Photos.Id, Photos.FileTitle, Photos.primaryUri 
+                            FROM Photos, Photos_Tags 
+                            WHERE Photos.Id = Photos_Tags.Photos_Id AND Photos_Tags.Tags_TagName = @0", tagName).ToList();
+    var similarTags = db.Query(@"SELECT Tags_TagName AS TagName, COUNT(*) AS Count 
+                                 FROM Photos_Tags WHERE Photos_Id IN (SELECT Photos_Id FROM Photos_Tags WHERE Tags_TagName = @0) AND Tags_TagName != @0
+                                 GROUP BY Tags_TagName 
+                                 ORDER BY Count DESC", tagName).ToList();
+}
+
+<h1>@tagName</h1>
+
+<section>
+    @if (photos.Count == 0)
+    {
+        <header>
+            <p>There are no photos with this tag.</p>
+        </header>
+    }
+    else
+    {
+        <header>
+            @if (photos.Count == 1)
+            {
+                <p>There is one photo with this tag.</p>
+            }
+            else
+            {
+                <p>There are @photos.Count photos with this tag.</p>
+            }
+        </header>
+
+        <ul class="thumbnails" data-role="listview">
+            @foreach (var photo in photos)
+            {
+                <li>
+                    <a href="~/Photo/View/@photo.Id" title="@photo.FileTitle">
+                        <img alt="thumbnail of @photo.FileTitle" 
+                             src="@thisSite.storageRoot/@thisSite.blobContainer/thumb/@photo.primaryUri" class="thumbnail-border" />
+                        <span class="right-of-image">@photo.FileTitle</span>
+                    </a>
+                </li>
+            }
+        </ul>
+
+        if (similarTags.Count > 0)
+        {
+            <section>
+                <h2 class="similar-tags">Similar tags:</h2>
+                <ul class="comma-separated clear">
+                    @foreach (var t in similarTags)
+                    {
+                        <li><a href="~/Tag/View/@t.TagName" title="@t.TagName">@t.TagName</a></li>
+                    }
+                </ul>
+            </section>
+        }
+    }
+</section>

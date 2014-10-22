@@ -1,0 +1,49 @@
+﻿@{
+    
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
+
+    var dbRead = appSettings["dbRead"];
+
+    var currentLocation = appSettings["siteName"];
+
+    var storageConfig = connectionStrings[currentLocation].ConnectionString;
+
+    var blob = appSettings["blobContainer"]; ;
+    var queue = appSettings["queueName"]; ;
+
+    var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
+
+    var db = Database.Open(dbRead); 
+    
+    var tags = db.Query(@"SELECT Tags_TagName AS TagName, COUNT(*) AS TagCount 
+                          FROM Photos_Tags 
+                          GROUP BY Tags_TagName
+                          ORDER BY Tags_TagName").ToList();
+
+    Page.Title = "View All Tags";
+}
+<hgroup>
+    <h1>Tags</h1>
+    @if (tags.Count == 1) 
+    {
+        <h2>There is one tag.</h2>
+    }
+    else
+    {
+        <h2>There are @tags.Count tags.</h2>
+    }
+</hgroup>
+<ul class="thumbnails galleries" data-role="listview">
+    @foreach (var tag in tags)
+    {
+        <li class="tag">
+            <a href="~/Tag/View/@tag.TagName" title="@tag.TagName">
+                <img alt="Images from @tag.TagName" src="~/Tag/Thumbnail/@tag.TagName" class="thumbnail-no-border" />
+                <span class="below-image">@tag.TagName</span>                
+                <span class="image-overlay hide-from-mobile">@tag.TagName photo(s)</span>
+                <span class="ui-li-count hide-from-desktop">@tag.TagCount</span>
+            </a>
+        </li>
+    } 
+</ul>

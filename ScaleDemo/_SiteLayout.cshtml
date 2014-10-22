@@ -1,0 +1,73 @@
+﻿@{
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var currentLocation = appSettings["siteName"];
+    var appInsights = appSettings["appInsights"];
+}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>@currentLocation</title>
+        <link href="/Content/Site.css" rel="stylesheet" />
+        <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        <script src="/Scripts/modernizr-2.6.2.js"></script>
+        <script src="/Scripts/jquery-1.8.2.min.js"></script>
+        <meta name="description" content="The description of my page" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script type="text/javascript">
+            window.appInsights =
+                {
+                    queue: [], applicationInsightsId: null, accountId: null, appUserId: null, configUrl: null, start: function (n) {
+                        function u(n) {
+                            t[n] = function () { var i = arguments; t.queue.push(function () { t[n].apply(t, i) }) }
+                        }
+                        function f(n, t) {
+                            if (n) {
+                                var u = r.createElement(i); u.type = "text/javascript"; u.src = n; u.async = !0; u.onload = t; u.onerror = t; r.getElementsByTagName(i)[0].parentNode.appendChild(u)
+                            } else t()
+                        }
+                        var r = document, t = this, i; t.applicationInsightsId = n; u("logEvent"); u("logPageView"); i = "script"; f(t.configUrl, function () {
+                            f("//az416426.vo.msecnd.net/scripts/a/ai.0.7.js")
+                        }); t.start = function () { }
+                    }
+                };
+
+            appInsights.start("@appInsights");
+            appInsights.logPageView();
+        </script>
+
+    </head>
+    <body>
+        <header id="banner">
+            <p class="site-title"><a href="~/">Photo Gallery (@currentLocation)</a></p>
+            <nav id="menu">
+                <ul>
+                    <li class="galleries"><a href="/" title="Galleries">Galleries</a></li>
+                    <li class="tags"><a href="/Tag" title="Tags">Tags</a></li>
+                    <li class="account"><a href="/User" title="Account">Account</a></li>
+                </ul>
+            </nav>
+            <div id="login">
+                @if (WebSecurity.IsAuthenticated)
+                {
+                    <span>
+                        Welcome <strong>@WebSecurity.CurrentUserName</strong>!
+                        <a href="~/Account/Logout" title="Logout">Logout</a>
+                    </span>
+                }
+                else
+                {
+                    <a href="~/Account/Login" title="Login">Login</a>
+                }
+            </div>
+        </header>
+        <div id="body">
+            @RenderBody()
+        </div>
+        <footer id="site-footer">
+            &copy; @DateTime.Now.Year - Photo Gallery 
+        </footer>
+        @RenderSection("Scripts", required: false)
+    </body>
+</html>
