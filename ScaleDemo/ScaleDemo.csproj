@@ -92,6 +92,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Data\placeholder.txt" />
+    <Content Include="App_Data\_tmp\full\placeholder.txt" />
+    <Content Include="App_Data\_tmp\large\placeholder.txt" />
+    <Content Include="App_Data\_tmp\medium\placeholder.txt" />
+    <Content Include="App_Data\_tmp\placeholder.txt" />
+    <Content Include="App_Data\_tmp\small\placeholder.txt" />
+    <Content Include="App_Data\_tmp\thumb\placeholder.txt" />
     <Content Include="Content\images\ajax-loader.gif" />
     <Content Include="Content\images\ajax-loader.png" />
     <Content Include="Content\images\icons-18-black.png" />
@@ -329,6 +336,7 @@
     <Content Include="Photo\View.cshtml" />
     <Content Include="Default.cshtml" />
     <Content Include="New.cshtml" />
+    <Content Include="Properties\webjobs-list.json" />
     <None Include="Scripts\jquery-2.1.1.intellisense.js" />
     <Content Include="Scripts\jquery-2.1.1.js" />
     <Content Include="Scripts\jquery-2.1.1.min.js" />
@@ -391,6 +399,7 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="..\packages\Microsoft.Web.WebJobs.Publish.1.0.0\tools\webjobs.targets" Condition="Exists('..\packages\Microsoft.Web.WebJobs.Publish.1.0.0\tools\webjobs.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
