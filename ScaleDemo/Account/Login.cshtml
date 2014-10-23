@@ -4,6 +4,11 @@
 }
 
 @{
+    var appSettings = System.Configuration.ConfigurationManager.AppSettings;
+    var dbWrite = appSettings["dbWrite"];
+
+    WebSecurity.InitializeDatabaseConnection(dbWrite, "UserProfiles", "UserId", "Email", true);
+    
     Page.Title = "Login";
 
     Validation.RequireField("email", "You must specify an email address.");
