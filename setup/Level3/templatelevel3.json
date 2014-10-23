@@ -1,70 +1,59 @@
 {
   "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {
-    /*
-    Websites 1
-    */
-    "siteName1": { "type": "string" },
-    "whp1": { "type": "string" },
+  "parameters": 
+  {
+    // Common Parameters
     "location1": { "type": "string" },
-    /*
-    Websites 2
-    */
-    "siteName2": { "type": "string" },
-    "whp2": { "type": "string" },
     "location2": { "type": "string" },
-    /*
-    SQL 1
-    */
+
+    // Websites Parameters
+    "whp1": { "type": "string" },
+    "whp2": { "type": "string" },
+    "siteName1": { "type": "string" },
+    "siteName2": { "type": "string" },
+    
+    //SQL Parameters
     "serverName1": { "type": "string" },
     "serverName2": { "type": "string" },
 
+    "databaseName": { "type": "string", "defaultValue": "scaleDb" },
+    "administratorLogin": { "type": "string", "defaultValue": "scaleAdmin" },
+    "administratorLoginPassword": { "type": "string", "defaultValue": "p@ssw0rd" },
+    "collation": { "type": "string", "defaultValue": "SQL_Latin1_General_CP1_CI_AS"},
+    "maxSizeBytes": { "type": "string", "defaultValue": "1073741824"}, 
 
-    "databaseName": { "type": "string",
-      "defaultValue": "scaleDb" },
+    //This demo requiers premium SQL for Active/Active GeoReplication    
+    "edition": { "type": "string", "defaultValue": "Premium"},
 
-    "administratorLogin": { "type": "string",
-      "defaultValue": "scaleAdmin" },
-
-    "administratorLoginPassword": { "type": "string",
-      "defaultValue": "p@ssw0rd" },
-
-    "collation": { "type": "string",
-      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"},
-
-    "edition": { "type": "string",
-        "defaultValue": "Premium"},
-
-    "maxSizeBytes": { "type": "string",
-      "defaultValue": "1073741824"}, 
-
+    //SQL Service objective ID are documented here:
+    //http://msdn.microsoft.com/en-us/library/azure/dn505701.aspx
     "requestedServiceObjectiveId": { "type": "string",
         "defaultValue": "7203483a-c4fb-4304-9e9f-17c71c904f5d"}
   },
-  "resources": [
-  /*
-  SQL 1
-  */
-  {
+  "resources": 
+  [
+    // SQL Servers Location 1
+    {
       "name": "[parameters('serverName1')]",
       "type": "Microsoft.Sql/servers",
       "location": "[parameters('location1')]",
       "apiVersion": "2.0",
-      "properties": {
+      "properties": 
+      {
         "administratorLogin": "[parameters('administratorLogin')]",
         "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
       },
-      "resources": [
+      "resources": 
+      [
         {
           "name": "[parameters('databaseName')]",
           "type": "databases",
           "location": "[parameters('location1')]",
           "apiVersion": "2.0",
-          "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', parameters('serverName1'))]"
-          ],
-          "properties": {
+          "dependsOn": [  "[concat('Microsoft.Sql/servers/', parameters('serverName1'))]" ],
+          "properties": 
+          {
             "edition": "[parameters('edition')]",
             "collation": "[parameters('collation')]",
             "maxSizeBytes": "[parameters('maxSizeBytes')]",
@@ -73,84 +62,81 @@
         },
         {
           "apiVersion": "2.0",
-          "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', parameters('serverName1'))]"
-          ],
+          "dependsOn": ["[concat('Microsoft.Sql/servers/', parameters('serverName1'))]"],
           "location": "[parameters('location1')]",
           "name": "open",
-          "properties": {
+          "properties": 
+          {
             "endIpAddress": "255.255.255.255",
             "startIpAddress": "0.0.0.0"
           },
           "type": "firewallrules"
         }
       ]
-  },
-  /*
-  SQL 2
-  */
-  {
+    },
+    // SQL Servers Location 2
+    {
       "name": "[parameters('serverName2')]",
       "type": "Microsoft.Sql/servers",
       "location": "[parameters('location2')]",
       "apiVersion": "2.0",
-      "properties": {
+      "properties": 
+      {
         "administratorLogin": "[parameters('administratorLogin')]",
         "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
       },
-      "resources": [
+      "resources": 
+      [
         {
           "apiVersion": "2.0",
-          "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', parameters('serverName2'))]"
-          ],
+          "dependsOn": ["[concat('Microsoft.Sql/servers/', parameters('serverName2'))]"],
           "location": "[parameters('location2')]",
           "name": "open",
-          "properties": {
+          "properties": 
+          {
             "endIpAddress": "255.255.255.255",
             "startIpAddress": "0.0.0.0"
           },
           "type": "firewallrules"
         }
       ]
-  },
-  /*
-  Location 1
-  */
+    },
+    // Web Hosting Plan Location 1
     {
       "apiVersion": "2014-04-01",
       "name": "[parameters('whp1')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[parameters('location1')]",
-      "properties": {
+      "properties": 
+      {
         "name": "[parameters('whp1')]",
         "sku": "Standard",
         "workerSize": "0",
         "numberOfWorkers": 1
       }
     },
+    // WebSite Location 1
     {
       "apiVersion": "2014-04-01",
       "name": "[parameters('siteName1')]",
       "type": "Microsoft.Web/sites",
       "location": "[parameters('location1')]",
-      "tags": {
-        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('whp1'))]": "Resource"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/serverfarms/', parameters('whp1'))]"
-      ],
-      "properties": {
+      "tags": {"[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('whp1'))]": "Resource"},
+      "dependsOn": ["[concat('Microsoft.Web/serverfarms/', parameters('whp1'))]"],
+      "properties": 
+      {
         "name": "[parameters('siteName1')]",
         "serverFarm": "[parameters('whp1')]"
       },
-      "resources": [
-      {
+      "resources": 
+      [
+        {
           "apiVersion": "2014-04-01",
           "name": "web",
           "type": "sourcecontrols",
           "dependsOn": ["[resourceId('Microsoft.Web/Sites', parameters('siteName1'))]"],
-          "properties": {
+          "properties": 
+          {
             "RepoUrl": "https://github.com/btardif/ScaleDemo",
             "branch": "Master",
             "IsManualIntegration": true
@@ -158,15 +144,14 @@
         }
       ]
     },
-  /*
-  Location 2
-  */
+    // Web Hosting Plan Location 1
     {
       "apiVersion": "2014-04-01",
       "name": "[parameters('whp2')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[parameters('location2')]",
-      "properties": {
+      "properties": 
+      {
         "name": "[parameters('whp2')]",
         "sku": "Standard",
         "workerSize": "0",
@@ -178,23 +163,22 @@
       "name": "[parameters('siteName2')]",
       "type": "Microsoft.Web/sites",
       "location": "[parameters('location2')]",
-      "tags": {
-        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('whp2'))]": "Resource"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/serverfarms/', parameters('whp2'))]"
-      ],
-      "properties": {
+      "tags": { "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('whp2'))]": "Resource" },
+      "dependsOn": ["[concat('Microsoft.Web/serverfarms/', parameters('whp2'))]"],
+      "properties": 
+      {
         "name": "[parameters('siteName2')]",
         "serverFarm": "[parameters('whp2')]"
       },
-      "resources": [
-      {
+      "resources": 
+      [
+        {
           "apiVersion": "2014-04-01",
           "name": "web",
           "type": "sourcecontrols",
           "dependsOn": ["[resourceId('Microsoft.Web/Sites', parameters('siteName2'))]"],
-          "properties": {
+          "properties": 
+          {
             "RepoUrl": "https://github.com/btardif/ScaleDemo",
             "branch": "Master",
             "IsManualIntegration": true
