@@ -52,7 +52,7 @@ namespace CQRS
             for (int i = 0; i < connectionStrings.Count; i++)
             {
 
-                if (connectionStrings[i].ProviderName == "" && !connectionStrings[i].Name.Contains("Local"))
+                if (connectionStrings[i].ProviderName == "Custom" && !connectionStrings[i].Name.Contains("Local"))
                 {
                     Console.WriteLine("Adding Storage Location:\t" + connectionStrings[i].Name);
 

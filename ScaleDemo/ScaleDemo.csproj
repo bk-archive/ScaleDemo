@@ -343,7 +343,6 @@
     <Content Include="Default.cshtml" />
     <Content Include="New.cshtml" />
     <Content Include="Properties\webjobs-list.json" />
-    <None Include="Properties\PublishProfiles\ScaleDemo-2254.pubxml" />
     <None Include="Scripts\jquery-2.1.1.intellisense.js" />
     <Content Include="Scripts\jquery-2.1.1.js" />
     <Content Include="Scripts\jquery-2.1.1.min.js" />
