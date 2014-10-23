@@ -49,8 +49,13 @@ namespace CQRS
             Console.WriteLine("databaseWrite\t" + databaseWrite);
 
 
+            Console.WriteLine("Discovering Storage Locations...");
+
             for (int i = 0; i < connectionStrings.Count; i++)
             {
+                Console.WriteLine("Connection String Name " + connectionStrings[i].Name);
+                Console.WriteLine("Connection String String " + connectionStrings[i].ConnectionString);
+                Console.WriteLine("Connection String Provider " + connectionStrings[i].ProviderName);
 
                 if (connectionStrings[i].ProviderName == "Custom" && !connectionStrings[i].Name.Contains("Local"))
                 {
