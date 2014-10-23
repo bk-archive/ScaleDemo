@@ -57,7 +57,7 @@ namespace CQRS
                 Console.WriteLine("Connection String String " + connectionStrings[i].ConnectionString);
                 Console.WriteLine("Connection String Provider " + connectionStrings[i].ProviderName);
 
-                if (connectionStrings[i].ProviderName == "Custom" && !connectionStrings[i].Name.Contains("Local"))
+                if (connectionStrings[i].ProviderName == "" && !connectionStrings[i].Name.Contains("Local"))
                 {
                     Console.WriteLine("Adding Storage Location:\t" + connectionStrings[i].Name);
 
@@ -72,9 +72,19 @@ namespace CQRS
                 }
             }
 
-            JobHost host = new JobHost(config);
+            if (locations.Count > 0)
+            {
+                Console.WriteLine("Total Storage Locations: " + locations.Count);
+                JobHost host = new JobHost(config);
+                host.RunAndBlock();
+            }
+            else 
+            {
+                Console.WriteLine("ERROR: No storage locations found!");
+            }
             
-            host.RunAndBlock();
+
+
         }
 
 
