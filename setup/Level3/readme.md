@@ -25,9 +25,9 @@ Select your subscription by using the Select-AzureSubscription cmdlet
 
 Once you have logged-in and selected the subscription to use, you can now execute the setup script.
 
-Run the **setup.ps1** from your PowerShell cmdline.
+Run the **setup-level3.ps1** from your PowerShell cmdline.
 
-The **scaledemotemplate.json** and **script.sql** should be on the same directory.
+The **templatelevel3.json** and **schemaphotogallery.sql** should be on the same directory.
 
 To clean up all you need to do is delete the resourcegroup:
 
