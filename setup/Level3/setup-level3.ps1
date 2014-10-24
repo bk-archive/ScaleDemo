@@ -93,7 +93,7 @@ else
         Set-AzureTrafficManagerProfile -TrafficManagerProfile $WATM_Profile
 		Enable-AzureTrafficManagerProfile -Name $RG_Name
 		
-        Get-AzureTrafficManagerProfile -Name $RG_Name -ForegroundColor Green 
+        Get-AzureTrafficManagerProfile -Name $RG_Name
 		[System.Console]::Beep(400,1500)
 
 	}
