@@ -113,7 +113,7 @@ else
 
 		$ConnectionStringList1 = (Get-AzureWebsite $WS1_Name).ConnectionStrings
 		$ConnectionStringList1.add($primaryDB)
-        $ConnectionStringList1.add($primaryDB)
+        $ConnectionStringList1.add($secondaryDB)
 		$ConnectionStringList1.add($Site1Storage)
 
 		Write-Host ($ConnectionStringList1 | Format-List | Out-String)  -ForegroundColor Green 
