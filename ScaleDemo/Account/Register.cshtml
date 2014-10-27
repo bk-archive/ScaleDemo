@@ -33,6 +33,7 @@
     {
         var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
         var userObject = new GalleryHelpers.Users();
+        var retryCount = 0;
 
         // Execute validators and also check if any ReCaptcha errors are present.
         var email = Request["email"];
@@ -56,21 +57,33 @@
             operationMessage.galleryObject = userObject.ToString();
             operationMessage.serializedobject = Json.Encode(userObject);
 
-            aSH.enqueue(queue, operationMessage);
+           var userInserted = aSH.enqueue(queue, operationMessage);
 
-            // Create and associate a new entry in the membership database.
-            // If successful, continue processing the request
-            try
+            do
             {
-                System.Threading.Thread.Sleep(6000);
-                WebSecurity.CreateAccount(email, password);
-                WebSecurity.Login(email, password);
-                Response.Redirect("~/");
-            }
-            catch (System.Web.Security.MembershipCreateUserException e)
-            {
-                ModelState.AddFormError(e.ToString());
-            }
+                
+                if (userInserted)
+                {
+                    // Create and associate a new entry in the membership database.
+                    // If successful, continue processing the request
+                    try
+                    {
+                        WebSecurity.CreateAccount(email, password);
+                        WebSecurity.Login(email, password);
+                        Response.Redirect("~/");
+                    }
+                    catch (System.Web.Security.MembershipCreateUserException e)
+                    {
+                        ModelState.AddFormError(e.ToString());
+                    }
+                }
+                else
+                {
+                    retryCount++;
+                    System.Threading.Thread.Sleep(3000 * retryCount);
+                    userInserted = aSH.enqueue(queue, operationMessage);
+                }
+            } while (retryCount <= 4);
         }
         else
         {
