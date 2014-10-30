@@ -1,8 +1,8 @@
 #Pre-Requisites
 
 <ol>
-    <li>Have an Azure Subscription</li>
-    <li>Install Azure Powershell</li>
+    <li>Have an Azure Subscription https://portal.azure.com/ </li>
+    <li>Install Azure Powershell http://azure.microsoft.com/en-us/documentation/articles/install-configure-powershell/ </li>
 </ol>
 
 ***
