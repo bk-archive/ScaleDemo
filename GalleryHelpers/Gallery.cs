@@ -26,7 +26,8 @@ namespace GalleryHelpers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.InnerException);
+                Console.WriteLine("ERROR: " + e.Message);
+                Console.WriteLine("ERROR: " + query);
                 return false;
             }
         }
@@ -228,8 +229,17 @@ namespace GalleryHelpers
         {
             if (!exist("SELECT Email FROM UserProfiles WHERE LOWER(Email) = LOWER(" + email + ")"))
             {
-                nonquery(@"INSERT INTO UserProfiles (Email, DisplayName, Bio) VALUES ('" + email + "', '" + email + "', '')");
-                return true;
+                try
+                {
+                    nonquery(@"INSERT INTO UserProfiles (Email, DisplayName, Bio) VALUES ('" + email + "', '" + email + "', '')");
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Failed to Insert User" + e.Message);
+                    return false;
+                }
+                
             }
             return false;
         }
