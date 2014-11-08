@@ -57,7 +57,7 @@
         </li>
     }
 </ul>
-@if (WebSecurity.IsAuthenticated || testUser != string.Empty)
+@if (WebSecurity.IsAuthenticated)
 {
     <p class="actions hide-from-mobile">
         <a href="~/Upload/@galleryId?name=@testUser" title="Upload a Photo">Upload a Photo</a>
