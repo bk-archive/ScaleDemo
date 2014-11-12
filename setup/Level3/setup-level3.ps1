@@ -31,12 +31,12 @@ else
 	#Website Location 1
 	$WS1_Name = "scaledemo-" +  $Random1
 	$WS1_Hostname = $WS1_Name + ".azurewebsites.net"
-	$Site1Settings = @{ "dbRead" = "read"; "dbWrite" = "write"; "SiteName" = $WS1_Name; "queueName"="scaledemo"; "blobContainer" = "scaledemo" }	
+	$Site1Settings = @{ "dbRead" = "read"; "dbWrite" = "write"; "SiteName" = $WS1_Name; "queueName"="scaledemo"; "blobContainer" = "scaledemo"; "WEBSITE_ARR_SESSION_AFFINITY_DISABLE" = "TRUE" }	
 	
 	#Website Location 2
 	$WS2_Name = "scaledemo-" +  $Random2
 	$WS2_Hostname = $WS2_Name + ".azurewebsites.net"
-	$Site2Settings = @{ "dbRead" = "read"; "dbWrite" = "write"; "SiteName" = $WS2_Name; "queueName"="scaledemo"; "blobContainer" = "scaledemo" }
+	$Site2Settings = @{ "dbRead" = "read"; "dbWrite" = "write"; "SiteName" = $WS2_Name; "queueName"="scaledemo"; "blobContainer" = "scaledemo"; "WEBSITE_ARR_SESSION_AFFINITY_DISABLE" = "TRUE" }
 
 	#SQL Servers
 	$SQL1_Server = "scaledemosql-" +  $Random1
