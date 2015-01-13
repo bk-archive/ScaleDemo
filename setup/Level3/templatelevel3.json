@@ -138,7 +138,7 @@
           "properties": 
           {
             "RepoUrl": "https://github.com/btardif/ScaleDemo",
-            "branch": "Master",
+            "branch": "master",
             "IsManualIntegration": true
           }
         }
@@ -180,7 +180,7 @@
           "properties": 
           {
             "RepoUrl": "https://github.com/btardif/ScaleDemo",
-            "branch": "Master",
+            "branch": "master",
             "IsManualIntegration": true
           }
         }
