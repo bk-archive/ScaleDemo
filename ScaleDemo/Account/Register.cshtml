@@ -70,6 +70,7 @@
                     {
                         WebSecurity.CreateAccount(email, password);
                         WebSecurity.Login(email, password);
+                        Session["loginTime"] = DateTime.Now.ToString();
                         Response.Redirect("~/");
                     }
                     catch (System.Web.Security.MembershipCreateUserException e)

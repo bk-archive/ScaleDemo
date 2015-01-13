@@ -1,5 +1,5 @@
 ﻿@using GalleryHelpers;
-
+@using StackExchange.Redis;
 @{
     var testUser = Request.QueryString["name"];
 
@@ -11,6 +11,8 @@
     var storageConfig = connectionStrings[currentLocation].ConnectionString;
     var blob = appSettings["blobContainer"]; ;
     var queue = appSettings["queueName"]; ;
+    var redisURL = appSettings["redisURL"];
+    var redisKey = appSettings["redisKey"];
 
     var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
     var galleryId = UrlData[0].AsInt();
@@ -29,6 +31,9 @@
     if (IsPost)
     {
         var aSH = new GalleryHelpers.azureStorageHelper(thisSite.storageAccount, thisSite.storageAccountKey);
+        ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisURL + ",ssl=true,password=" + redisKey);
+        IDatabase cachedb = connection.GetDatabase();
+        var rediscacheKey = "user:" + WebSecurity.CurrentUserId + ":photosUploaded";
         var numFiles = Request.Files.Count;
 
         if (numFiles == 0)
@@ -85,6 +90,8 @@
                         ModelState.AddError("fileUpload", "There was a problem uploading your file");
                     }
                 }
+                // Add the number of photos uploaded by the user to Azure Cache
+                cachedb.StringIncrement(rediscacheKey);
             }
             System.Threading.Thread.Sleep(500);
             Response.Redirect(Href("~/View", galleryId));

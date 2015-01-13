@@ -17,6 +17,7 @@
         
         if (WebSecurity.Login(email, password, rememberMe)) 
         {
+            Session["loginTime"] = DateTime.Now.ToString();
             string returnUrl = Request["returnUrl"];
             if (!returnUrl.IsEmpty()) 
             {
