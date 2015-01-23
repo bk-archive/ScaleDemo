@@ -1,5 +1,4 @@
-﻿@using StackExchange.Redis;
-@{
+﻿@{
     var appSettings = System.Configuration.ConfigurationManager.AppSettings;
     var connectionStrings = System.Configuration.ConfigurationManager.ConnectionStrings;
 
@@ -11,11 +10,6 @@
 
     var blob = appSettings["blobContainer"]; ;
     var queue = appSettings["queueName"]; ;
-    var redisURL = appSettings["redisURL"];
-    var redisKey = appSettings["redisKey"];
-    ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisURL + ",ssl=true,password=" + redisKey);
-    IDatabase cachedb = connection.GetDatabase();
-    var rediscacheKey = "user:" + WebSecurity.CurrentUserId + ":photosUploaded";
 
     var thisSite = new GalleryHelpers.SiteLocation(currentLocation, storageConfig, blob, queue);
 
@@ -64,13 +58,13 @@
 <section id="photo">
     <hgroup>
         <h1>@(user.DisplayName)'s Photos</h1>
-        @if (cachedb.StringGet(rediscacheKey) == 1)
+        @if (photos.Count == 1)
         {
             <h2>This user has uploaded one photo.</h2>
         }
         else
         {
-            <h2>This user has uploaded @cachedb.StringGet(rediscacheKey) photos.</h2>
+            <h2>This user has uploaded @photos.Count photos.</h2>
         }
     </hgroup>
 
