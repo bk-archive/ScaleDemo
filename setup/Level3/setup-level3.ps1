@@ -53,7 +53,9 @@ else
 	$primaryDB = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
 	$secondaryDB = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
 	$Site1Storage = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
+    $Site1WebjobPortal = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
 	$Site2Storage = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
+    $Site2WebjobPortal = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
 
 	#traffic manager properties
 	$WATM_Domain = $RG_Name + ".trafficmanager.net"
@@ -178,11 +180,16 @@ else
 		$Site2Storage.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA2_Name + ";AccountKey=" + $SA2_Key.Primary 
 		$Site2Storage.Type = "Custom"
 
+        $Site1WebjobPortal.Name = "AzureWebJobsDashboard"
+		$Site1WebjobPortal.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA1_Name + ";AccountKey=" + $SA1_Key.Primary 
+		$Site1WebjobPortal.Type = "Custom"
+
 		$ConnectionStringList1 = (Get-AzureWebsite $WS1_Name).ConnectionStrings
 		$ConnectionStringList1.add($primaryDB)
 		$ConnectionStringList1.add($secondaryDB)
 		$ConnectionStringList1.add($Site1Storage)
 		$ConnectionStringList1.add($Site2Storage)
+        $ConnectionStringList1.add($Site1WebjobPortal)
 
 		Write-Host ($ConnectionStringList1 | Format-List | Out-String)  -ForegroundColor Green 
 		Set-AzureWebsite $WS1_Name -ConnectionStrings $ConnectionStringList1
@@ -203,11 +210,16 @@ else
 		$Site2Storage.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA2_Name + ";AccountKey=" + $SA2_Key.Primary 
 		$Site2Storage.Type = "Custom"
 
+        $Site2WebjobPortal.Name = "AzureWebJobsDashboard"
+		$Site2WebjobPortal.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA2_Name + ";AccountKey=" + $SA2_Key.Primary 
+		$Site2WebjobPortal.Type = "Custom"
+
 		$ConnectionStringList2 = (Get-AzureWebsite $WS2_Name).ConnectionStrings
 		$ConnectionStringList2.add($primaryDB)
 		$ConnectionStringList2.add($secondaryDB)
 		$ConnectionStringList2.add($Site1Storage)
 		$ConnectionStringList2.add($Site2Storage)
+        $ConnectionStringList2.add($Site2WebjobPortal)
 
 		Write-Host ($ConnectionStringList2 | Format-List | Out-String)  -ForegroundColor Green 
 		Set-AzureWebsite $WS2_Name -ConnectionStrings $ConnectionStringList2

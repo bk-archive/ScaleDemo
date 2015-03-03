@@ -41,6 +41,7 @@ else
 	$primaryDB = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
     $secondaryDB = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
 	$Site1Storage = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
+    $WJDashboard = New-Object Microsoft.WindowsAzure.Commands.Utilities.Websites.Services.WebEntities.ConnStringInfo
 
 	#Provition Resources From Template
 	#This will create:
@@ -111,10 +112,15 @@ else
 		$Site1Storage.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA1_Name + ";AccountKey=" + $SA1_Key.Primary 
 		$Site1Storage.Type = "Custom"
 
+        $WJDashboard.Name = "AzureWebJobsDashboard"
+		$WJDashboard.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=" + $SA1_Name + ";AccountKey=" + $SA1_Key.Primary 
+		$WJDashboard.Type = "Custom"
+
 		$ConnectionStringList1 = (Get-AzureWebsite $WS1_Name).ConnectionStrings
 		$ConnectionStringList1.add($primaryDB)
         $ConnectionStringList1.add($secondaryDB)
 		$ConnectionStringList1.add($Site1Storage)
+        $ConnectionStringList1.add($WJDashboard)
 
 		Write-Host ($ConnectionStringList1 | Format-List | Out-String)  -ForegroundColor Green 
 		Set-AzureWebsite $WS1_Name -ConnectionStrings $ConnectionStringList1
@@ -126,8 +132,6 @@ else
 		Write-Host $Error[0] -ForegroundColor Red 
     	exit 1 
 	}
-
-    pause
 
 	write-host "Populating SQL Schema" -ForegroundColor Green 
 	#Connect to MS SQL Server 
