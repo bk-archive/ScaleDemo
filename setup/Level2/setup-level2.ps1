@@ -127,6 +127,8 @@ else
     	exit 1 
 	}
 
+    pause
+
 	write-host "Populating SQL Schema" -ForegroundColor Green 
 	#Connect to MS SQL Server 
 	try 
