@@ -9,7 +9,7 @@
 
     var currentLocation = appSettings["siteName"];
 
-    var dbRead = appSettings["dbWrite"];
+    var dbRead = appSettings["dbRead"];
     var blob = appSettings["blobContainer"]; ;
     var queue = appSettings["queueName"]; ;
 
@@ -50,12 +50,20 @@
 
         if (userExists == null)
         {
+
+            var operationMessage = new GalleryHelpers.Message();
+
+            operationMessage.operation = "insert";
+            operationMessage.galleryObject = userObject.ToString();
+            operationMessage.serializedobject = Json.Encode(userObject);
+
+           var userInserted = aSH.enqueue(queue, operationMessage);
+
             do
             {
-                try
+                
+                if (userInserted)
                 {
-                    db.Execute(@"INSERT INTO UserProfiles (Email, DisplayName, Bio) VALUES ('" + email + "', '" + email + "', '')");
-
                     // Create and associate a new entry in the membership database.
                     // If successful, continue processing the request
                     try
@@ -69,11 +77,11 @@
                         ModelState.AddFormError(e.ToString());
                     }
                 }
-                catch (Exception e)
+                else
                 {
                     retryCount++;
-                    System.Threading.Thread.Sleep(1000 * retryCount);
-                    Console.WriteLine("Failed to Insert User" + e.Message);
+                    System.Threading.Thread.Sleep(3000 * retryCount);
+                    userInserted = aSH.enqueue(queue, operationMessage);
                 }
             } while (retryCount <= 4);
         }
