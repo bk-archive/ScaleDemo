@@ -9,7 +9,7 @@
 
     var currentLocation = appSettings["siteName"];
 
-    var dbRead = appSettings["dbRead"];
+    var dbRead = appSettings["dbWrite"];
     var blob = appSettings["blobContainer"]; ;
     var queue = appSettings["queueName"]; ;
 
@@ -50,38 +50,30 @@
 
         if (userExists == null)
         {
+            string query = @"INSERT INTO UserProfiles (Email, DisplayName, Bio) VALUES ('" + email + "', '" + email + "', '')";
+            
+           // var operationMessage = new GalleryHelpers.Message();
+           // operationMessage.operation = "insert";
+           // operationMessage.galleryObject = userObject.ToString();
+           // operationMessage.serializedobject = Json.Encode(userObject);
+           //var userInserted = aSH.enqueue(queue, operationMessage);
 
-            var operationMessage = new GalleryHelpers.Message();
-
-            operationMessage.operation = "insert";
-            operationMessage.galleryObject = userObject.ToString();
-            operationMessage.serializedobject = Json.Encode(userObject);
-
-           var userInserted = aSH.enqueue(queue, operationMessage);
-
+            //Insert User
             do
             {
-                
-                if (userInserted)
+                // Create and associate a new entry in the membership database.
+                // If successful, continue processing the request
+                try
                 {
-                    // Create and associate a new entry in the membership database.
-                    // If successful, continue processing the request
-                    try
-                    {
-                        WebSecurity.CreateAccount(email, password);
-                        WebSecurity.Login(email, password);
-                        Response.Redirect("~/");
-                    }
-                    catch (System.Web.Security.MembershipCreateUserException e)
-                    {
-                        ModelState.AddFormError(e.ToString());
-                    }
+                    var status = db.Execute(query);
+                    WebSecurity.CreateAccount(email, password);
+                    WebSecurity.Login(email, password);
+                    Response.Redirect("~/");
                 }
-                else
+                catch (Exception e)
                 {
                     retryCount++;
                     System.Threading.Thread.Sleep(3000 * retryCount);
-                    userInserted = aSH.enqueue(queue, operationMessage);
                 }
             } while (retryCount <= 4);
         }
