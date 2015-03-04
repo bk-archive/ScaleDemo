@@ -181,7 +181,7 @@ else
 		$Site2Storage.Type = "Custom"
 
         $Site1WebjobPortal.Name = "AzureWebJobsDashboard"
-		$Site1WebjobPortal.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA1_Name + ";AccountKey=" + $SA1_Key.Primary 
+		$Site1WebjobPortal.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=" + $SA1_Name + ";AccountKey=" + $SA1_Key.Primary 
 		$Site1WebjobPortal.Type = "Custom"
 
 		$ConnectionStringList1 = (Get-AzureWebsite $WS1_Name).ConnectionStrings
@@ -211,7 +211,7 @@ else
 		$Site2Storage.Type = "Custom"
 
         $Site2WebjobPortal.Name = "AzureWebJobsDashboard"
-		$Site2WebjobPortal.ConnectionString = "DefaultEndpointsProtocol=http;AccountName=" + $SA2_Name + ";AccountKey=" + $SA2_Key.Primary 
+		$Site2WebjobPortal.ConnectionString = "DefaultEndpointsProtocol=https;AccountName=" + $SA2_Name + ";AccountKey=" + $SA2_Key.Primary 
 		$Site2WebjobPortal.Type = "Custom"
 
 		$ConnectionStringList2 = (Get-AzureWebsite $WS2_Name).ConnectionStrings
